@@ -39,7 +39,7 @@ void test0 ()
 
 void draw (unsigned w, unsigned h, const points &locs, const polygons &all_polys)
 {
-    unsigned border = 100;
+    unsigned border = 200;
     rgb8_image_t img (h + border * 2, w + border * 2);
     img.assign (255);
 
@@ -74,31 +74,28 @@ void draw (unsigned w, unsigned h, const points &locs, const polygons &all_polys
 
 void test1 ()
 {
-    unsigned w = 200;
-    unsigned h = 200;
-    double tw = 40;
-    double th = 40;
-    double angle = 10;
-    auto locs = get_tile_locations (h, w, point (w / 2.0, h / 2.0), tw, th, angle, false);
-    const polygons tile_polys { polygon { point (0, 0), point (tw, 0), point (tw, th), point (0, th) } };
-    auto all_polys = get_tiled_polygons (locs, tile_polys, angle);
+    const unsigned w = 200;
+    const unsigned h = 200;
+    const double scale = 40.0;
+    const double angle = 10.0;
+    const auto locs = get_tile_locations (h, w, point (w / 2.0, h / 2.0), scale, scale, angle, false);
+    const polygons tile_polys { polygon { point (0, 0), point (1.0, 0), point (1.0, 1.0), point (0, 1.0) } };
+    const auto all_polys = get_tiled_polygons (locs, tile_polys, scale, angle);
     draw (w, h, locs, all_polys);
 }
 
 void test2 ()
 {
-    unsigned w = 200;
-    unsigned h = 200;
+    const unsigned w = 200;
+    const unsigned h = 200;
     const polygon screen { point (0, 0), point (w, 0), point (w, h), point (0, h) };
-
-    floret_pentagonal p;
-    double scale = 30;
-    double tw = scale * p.get_width ();
-    double th = scale * p.get_height ();
-    double angle = 10;
-    auto locs = get_tile_locations (h, w, point (w / 2.0, h / 2.0), tw, th, angle, p.is_triangular ());
-    const polygons tile_polys = ::scale (p.get_polygons (), scale);
-    auto all_polys = get_tiled_polygons (locs, tile_polys, angle);
+    const floret_pentagonal p;
+    const double scale = 30.0;
+    const double tw = scale * p.get_width ();
+    const double th = scale * p.get_height ();
+    const double angle = 10.0;
+    const auto locs = get_tile_locations (h, w, point (w / 2.0, h / 2.0), tw, th, angle, p.is_triangular ());
+    const polygons all_polys = get_tiled_polygons (locs, p.get_polygons (), scale, angle);
     draw (w, h, locs, all_polys);
 }
 
