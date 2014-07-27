@@ -37,57 +37,73 @@ void test0 ()
     VERIFY (l.size () == 40);
 }
 
-void draw (unsigned w, unsigned h, const points &locs, const polygons &all_polys)
+unsigned BORDER = 200;
+rgb8_image_t img;
+const unsigned w = 400;
+const unsigned h = 300;
+
+void init_image ()
 {
-    unsigned border = 200;
-    rgb8_image_t img (h + border * 2, w + border * 2);
+    img = rgb8_image_t (h + BORDER * 2, w + BORDER * 2);
     img.assign (255);
+}
 
-    // draw polygons
-    for (auto i : all_polys)
-        draw_lines (img, i + point (border, border), rgb8_pixel_t ({212, 212, 212}));
-
-    // draw screen outline
-    const polygon screen { point (0, 0), point (w, 0), point (w, h), point (0, h) };
-    draw_lines (img, screen + point (border, border), rgb8_pixel_t ({200, 200, 255}));
-
-    // draw red dots at tile locations
-    for (auto i : locs)
-    {
-        point pt = i + point (border, border);
-        size_t px = round (pt.x);
-        size_t py = round (pt.y);
-        if (px < img.cols () && py < img.rows ())
-        {
-            img (py, px, 0) = 255;
-            img (py, px, 1) = 0;
-            img (py, px, 2) = 0;
-        }
-    }
-
+void show_image ()
+{
     const char *name = "test";
     cv::imshow (name, image_to_mat (img));
-    cv::moveWindow (name, 200, 200);
+    cv::moveWindow (name, 100, 100);
     cv::waitKey (0);
     cv::destroyWindow (name);
 }
 
+void draw_polys (const polygons &all_polys, const rgb8_pixel_t &p)
+{
+    // draw polygons
+    for (auto i : all_polys)
+        draw_lines (img, i + point (BORDER, BORDER), p);
+}
+
+void draw_locs (const points &locs, const rgb8_pixel_t &p)
+{
+    // draw red dots at tile locations
+    for (auto i : locs)
+    {
+        point pt = i + point (BORDER, BORDER);
+        size_t px = round (pt.x);
+        size_t py = round (pt.y);
+        if (px < img.cols () && py < img.rows ())
+        {
+            img (py, px, 0) = p[0];
+            img (py, px, 1) = p[1];
+            img (py, px, 2) = p[1];
+        }
+    }
+}
+
+void draw_border (const rgb8_pixel_t &p)
+{
+    // draw screen outline
+    const polygon screen { point (0, 0), point (w, 0), point (w, h), point (0, h) };
+    draw_lines (img, screen + point (BORDER, BORDER), p);
+}
+
 void test1 ()
 {
-    const unsigned w = 200;
-    const unsigned h = 200;
     const double scale = 40.0;
     const double angle = 10.0;
     const auto locs = get_tile_locations (h, w, point (w / 2.0, h / 2.0), scale, scale, angle, false);
     const polygons tile_polys { polygon { point (0, 0), point (1.0, 0), point (1.0, 1.0), point (0, 1.0) } };
     const auto all_polys = get_tiled_polygons (locs, tile_polys, scale, angle);
-    draw (w, h, locs, all_polys);
+    init_image ();
+    draw_polys (all_polys, {212, 212, 212});
+    draw_locs (locs, {255, 0, 0});
+    draw_border ({200, 200, 255});
+    show_image ();
 }
 
 void test2 ()
 {
-    const unsigned w = 200;
-    const unsigned h = 200;
     const polygon screen { point (0, 0), point (w, 0), point (w, h), point (0, h) };
     const floret_pentagonal p;
     const double scale = 30.0;
@@ -96,15 +112,22 @@ void test2 ()
     const double angle = 10.0;
     const auto locs = get_tile_locations (h, w, point (w / 2.0, h / 2.0), tw, th, angle, p.is_triangular ());
     const polygons all_polys = get_tiled_polygons (locs, p.get_polygons (), scale, angle);
-    draw (w, h, locs, all_polys);
+    init_image ();
+    draw_polys (all_polys, {212, 212, 212});
+    draw_locs (locs, {255, 0, 0});
+    draw_border ({200, 200, 255});
+    show_image ();
 }
 
 int main ()
 {
     try
     {
+        clog << "test0" << endl;
         test0 ();
+        clog << "test1" << endl;
         test1 ();
+        clog << "test2" << endl;
         test2 ();
 
         return 0;
