@@ -285,14 +285,27 @@ void draw_lines (grayscale8_image_t &img, const polygon &poly, unsigned p)
         draw_line (img, poly[i], poly[(i + 1) % poly.size ()], p);
 }
 
+void draw_line (rgb8_image_t &img, const point &p1, const point &p2, const rgb8_pixel_t &p)
+{
+    std::vector<point> pts = get_line (p1, p2);
+    const rect img_rect (0, 0, img.cols (), img.rows ());
+    for (auto i : pts)
+    {
+        int x = ::round (i.x);
+        int y = ::round (i.y);
+        if (contains (img_rect, x, y))
+        {
+            img (y, x, 0) = p[0];
+            img (y, x, 1) = p[1];
+            img (y, x, 2) = p[2];
+        }
+    }
+}
+
 void draw_lines (rgb8_image_t &img, const polygon &poly, const rgb8_pixel_t &p)
 {
-    for (auto i : { 0, 1, 2 })
-    {
-        auto q = get_channel (img, i);
-        draw_lines (q, poly, p[i]);
-        put_channel (q, img, i);
-    }
+    for (size_t i = 0; i < poly.size (); ++i)
+        draw_line (img, poly[i], poly[(i + 1) % poly.size ()], p);
 }
 
 grayscale8_image_t crop (const grayscale8_image_t &img, const rect &r)
