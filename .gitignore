@@ -1,0 +1,6 @@
+.lock-waf_darwin_build
+.lock-waf_linux2_build
+build/
+tests/.lock-waf_darwin_build
+tests/.lock-waf_linux2_build
+tests/build/
