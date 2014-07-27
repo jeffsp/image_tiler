@@ -12,7 +12,17 @@
 namespace image_tiler
 {
 
-// get coordinates of tiles in the window's coordinate system
+/// @brief get locations of tiles in a rectanglar window
+///
+/// @param row rows in window
+/// @param cols cols in window
+/// @param origin center point of window
+/// @param tile_width tile size
+/// @param tile_height tile size
+/// @param angle rotation angle in degrees
+/// @param is_triangular true if tiles are triangular
+///
+/// @return container of tile location points
 points get_tile_locations (const size_t rows,
     const size_t cols,
     const point &origin,
