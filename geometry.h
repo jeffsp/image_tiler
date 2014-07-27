@@ -184,6 +184,14 @@ polygon scale (const polygon &poly, const double s)
     return tmp;
 }
 
+polygons scale (const polygons &polys, const double s)
+{
+    polygons tmp (polys);
+    for (size_t i = 0; i < tmp.size (); ++i)
+        tmp[i] = scale (tmp[i], s);
+    return tmp;
+}
+
 polygon affine (const polygon &poly, const point &t, const double deg, const double sx, const double sy)
 {
     polygon tmp = translate (poly, t);
