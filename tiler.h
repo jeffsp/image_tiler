@@ -57,7 +57,7 @@ points get_tile_locations (const size_t rows,
     return p;
 }
 
-polygons get_tiled_polygons (const points &tile_locations, const polygons &polys, const double angle)
+polygons get_tiled_polygons (const points &tile_locations, const polygons &polys, const double scale, const double angle)
 {
     polygons all_polys;
 
@@ -69,7 +69,7 @@ polygons get_tiled_polygons (const points &tile_locations, const polygons &polys
         {
             // convert to window coordinates
             // save off the transformed poly
-            all_polys.push_back (affine (tile_poly, 1.0, 1.0, angle, offset));
+            all_polys.push_back (affine (tile_poly, scale, scale, angle, offset));
         }
     }
     return all_polys;
