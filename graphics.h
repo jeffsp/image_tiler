@@ -21,8 +21,8 @@ struct rect
     rect (int x, int y, unsigned width, unsigned height)
         : x (x)
         , y (y)
-        , width (width) // non-inclusive
-        , height (height) // non-inclusive
+        , width (width)
+        , height (height)
     {
     }
     int x;
@@ -40,39 +40,41 @@ std::ostream &operator<< (std::ostream &s, const rect &r)
     s << ' ' << r.height;
     return s;
 }
+
 bool operator== (const rect &a, const rect &b)
 {
     return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
 }
+
 bool intersects (const rect &a, const rect &b)
 {
-    int ax1 = a.x;
-    int ax2 = a.x + a.width;
-    int ay1 = a.y;
-    int ay2 = a.y + a.height;
-    int bx1 = b.x;
-    int bx2 = b.x + b.width;
-    int by1 = b.y;
-    int by2 = b.y + b.height;
+    const int ax1 = a.x;
+    const int ax2 = a.x + a.width;
+    const int ay1 = a.y;
+    const int ay2 = a.y + a.height;
+    const int bx1 = b.x;
+    const int bx2 = b.x + b.width;
+    const int by1 = b.y;
+    const int by2 = b.y + b.height;
     return ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1;
+}
+
+rect get_bounding_rect (const polygon &p)
+{
+    rectf r = get_bounding_rectf (p);
+    return rect (::round (r.minx), ::round (r.miny), ::round (r.maxx) - ::round (r.minx), ::round (r.maxy) - ::round (r.miny));
+}
+
+bool is_close (const polygon &a, const polygon &b)
+{
+    const rect ra = get_bounding_rect (a);
+    const rect rb = get_bounding_rect (b);
+    return intersects (ra, rb);
 }
 
 bool contains (const rect &r, int x, int y)
 {
     return (x >= r.x && y >= r.y && x < static_cast<int> (r.x + r.width) && y < static_cast<int> (r.y + r.height));
-}
-
-bool contains (const rect &r, double x, double y)
-{
-    return (x >= r.x && y >= r.y && x < (r.x + r.width) && y < (r.y + r.height));
-}
-
-bool contains (const rect &r, const polygon &p)
-{
-    for (auto pt : p)
-        if (contains (r, pt.x, pt.y))
-            return true;
-    return false;
 }
 
 struct scanline
