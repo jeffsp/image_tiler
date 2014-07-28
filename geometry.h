@@ -75,6 +75,7 @@ points operator+ (const points &a, const point &b)
         i += b;
     return c;
 }
+
 std::ostream& operator<< (std::ostream &s, const polygons &p)
 {
     for (auto i : p)
