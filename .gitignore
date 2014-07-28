@@ -4,3 +4,4 @@ build/
 tests/.lock-waf_darwin_build
 tests/.lock-waf_linux2_build
 tests/build/
+image.jpg
