@@ -114,6 +114,11 @@ void test2 ()
     const polygons all_polys = get_tiled_polygons (locs, p.get_polygons (), scale, angle);
     init_image ();
     draw_polys (all_polys, {212, 212, 212});
+    polygons window_polys;
+    for (const auto &p : all_polys)
+        if (is_close (screen, p))
+            window_polys.push_back (p);
+    draw_polys (window_polys, {100, 100, 100});
     draw_locs (locs, {255, 0, 0});
     draw_border ({200, 200, 255});
     show_image ();
