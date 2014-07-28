@@ -90,12 +90,18 @@ void draw_border (const rgb8_pixel_t &p)
 
 void draw_scanlines (const polygon_scanlines &ps)
 {
+    // get the clipping boundary
+    const rect window { 0, 0, w, h };
     for (const auto &i : ps)
     {
+        // clip the scanlines to the window
+        auto clipped = clip (i, window);
+        if (clipped.empty ())
+            continue;
         const int r = rand () % 256;
         const int g = rand () % 256;
         const int b = rand () % 256;
-        for (const auto &j : i)
+        for (const auto &j : clipped)
         {
             for (size_t k = 0; k < j.len; ++k)
             {
@@ -149,7 +155,7 @@ void test3 ()
     const auto locs = get_tile_locations (h, w, point (w / 2.0, h / 2.0), tw, th, angle, p.is_triangular ());
     const polygons all_polys = get_tiled_polygons (locs, p.get_polygons (), scale, angle);
     const polygons window_polys = get_overlapping_polygons (w, h, all_polys);
-    const polygon_scanlines ps = get_clipped_scanlines (w, h, window_polys);
+    const polygon_scanlines ps = get_polygon_scanlines (window_polys);
     init_image ();
     draw_scanlines (ps);
     show_image ();
