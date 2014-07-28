@@ -199,7 +199,8 @@ scanlines clip (const scanlines &s, const rect &r)
 
 unsigned get_mean (const grayscale8_image_t &img, const scanlines &s)
 {
-    assert (!s.empty ());
+    if (s.empty ())
+        return 0;
     size_t sum = 0;
     size_t total = 0;
     for (auto i : s)
@@ -210,8 +211,7 @@ unsigned get_mean (const grayscale8_image_t &img, const scanlines &s)
             sum += img (i.y, x, 0);
         }
     }
-    assert (total != 0);
-    unsigned p = ::round (sum / total);
+    unsigned p = ::round (static_cast<double> (sum) / total);
     assert (p < 256);
     return p;
 }
