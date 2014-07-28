@@ -110,73 +110,21 @@ polygon_scanlines get_polygon_scanlines (const polygons &p)
     return ps;
 }
 
-/*
-void tile_image (prgb8_image_t &img, const tiling_parameters &tp)
+polygon_scanlines clip_scanlines (const unsigned w, const unsigned h, const polygon_scanlines &s)
 {
-    // get the tile
-    const tile &t = tp.get_tile ();
-
-    // normalize by the scale of a tile
-    const double scale = tp.get_scale () / t.get_width ();
-
-    // get untranslated tile polygons
-    const polygons &tile_polys = t.get_polygons ();
-
-    // get the locations
-    points locs = get_tile_locations (img[0].rows (),
-        img[0].cols (),
-        point (tp.get_center_offset ()),
-        scale * t.get_width (),
-        scale * t.get_height (),
-        tp.get_angle (),
-        t.is_triangular ());
-
     // get the clipping boundary
-    const rect window_rect (0, 0, img[0].cols (), img[0].rows ());
-
-    // for each location
-    for (auto l : locs)
-    {
-        // windowed polygons
-        polygons window_polys;
-
-        // for each tile polygon
-        for (auto p : tile_polys)
+    const rect window { 0, 0, w, h };
+    polygon_scanlines ps;
+    transform (s.begin (), s.end (), back_inserter (ps),
+        [&] (const scanlines &a)
         {
-            // convert to window coordinates
-            auto wp = affine (p, scale, scale, tp.get_angle (), l);
-
-            // if the window contains any point of the windowed polygon, keep it
-            if (contains (window_rect, wp))
-                window_polys.push_back (wp);
-        }
-
-        // for each unclipped windowed polygon
-        for (auto wp : window_polys)
-        {
-            // get all the clipped scanlines
-            scanlines s = get_convex_polygon_scanlines (wp);
-            // scanlines should already be in ascending order for good cache usage
             // clip the scanlines to the window
-            s = clip (s, window_rect);
-            // continue if there is nothing to do
-            if (s.empty ())
-                continue;
-            // draw the scanlines
-            for (auto channel : { 0, 1, 2 })
-            {
-                // draw the tiles
-                unsigned m = get_mean (img[channel], s);
-                fill (s, img[channel], m);
-                // draw lines, if needed
-                if (tp.get_draw_line ())
-                    for (size_t i = 0; i < wp.size (); ++i)
-                        draw_lines (img[channel], wp, 255);
-            }
-        }
-    }
+            //
+            // it's OK to have an empty container of scanlines
+            return clip (a, window);
+        });
+    return ps;
 }
-*/
 
 }
 
