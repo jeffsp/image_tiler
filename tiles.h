@@ -11,7 +11,6 @@
 
 #include <cassert>
 #include <iostream>
-#include <list>
 #include <stdexcept>
 #include <string>
 
