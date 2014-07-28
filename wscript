@@ -5,7 +5,7 @@ out = 'build'
 # global definitions
 SOURCES='*.cc'
 CXXFLAGS=['-fopenmp','-Wall','-Werror','-std=c++0x']
-LIBS=[]
+LIBS=['gomp','rt','opencv_core','opencv_highgui','opencv_imgproc','opencv_objdetect']
 
 # variant specific build flags
 DEBUG_CXXFLAGS=CXXFLAGS+['-g']
