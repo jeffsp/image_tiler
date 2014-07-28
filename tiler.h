@@ -57,6 +57,14 @@ points get_tile_locations (const size_t rows,
     return p;
 }
 
+/// @brief get tiled polygons for the specified locations
+///
+/// @param tile_locations the tile locations
+/// @param polys polygons contained in one tile
+/// @param scale scale of the tile
+/// @param angle angle of the tile
+///
+/// @return all the polygons for all the locations
 polygons get_tiled_polygons (const points &tile_locations, const polygons &polys, const double scale, const double angle)
 {
     polygons all_polys;
@@ -73,6 +81,38 @@ polygons get_tiled_polygons (const points &tile_locations, const polygons &polys
         }
     }
     return all_polys;
+}
+
+polygons get_overlapping_polygons (const unsigned w, const unsigned h, const polygons &p)
+{
+    // get the clipping boundary
+    const polygon window { point (0, 0), point (w, 0), point (w, h), point (0, h) };
+    polygons l;
+    for (const auto &i : p)
+        if (is_close (window, i))
+            l.push_back (i);
+    return l;
+}
+
+typedef std::vector<scanlines> polygon_scanlines;
+
+polygon_scanlines get_clipped_scanlines (const unsigned w, const unsigned h, const polygons &p)
+{
+    // get the clipping boundary
+    const rect window { 0, 0, w, h };
+    polygon_scanlines ps;
+    for (const auto &i : p)
+    {
+        // get all the scanlines in the polygon
+        scanlines s = get_convex_polygon_scanlines (i);
+        // scanlines should already be in ascending order for good cache usage
+        // clip the scanlines to the window
+        s = clip (s, window);
+        // save them
+        if (!s.empty ())
+            ps.push_back (s);
+    }
+    return ps;
 }
 
 /*
