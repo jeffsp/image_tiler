@@ -11,5 +11,4 @@ run: waf
 	@for i in $(TARGETS); do \
 		echo ===== $$i =====; \
 		./build/debug/$$i; \
-		./build/release/$$i; \
 	done
