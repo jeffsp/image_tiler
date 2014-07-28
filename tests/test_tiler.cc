@@ -88,6 +88,25 @@ void draw_border (const rgb8_pixel_t &p)
     draw_lines (img, screen + point (BORDER, BORDER), p);
 }
 
+void draw_scanlines (const polygon_scanlines &ps)
+{
+    for (const auto &i : ps)
+    {
+        const int r = rand () % 256;
+        const int g = rand () % 256;
+        const int b = rand () % 256;
+        for (const auto &j : i)
+        {
+            for (size_t k = 0; k < j.len; ++k)
+            {
+                img (j.y + BORDER, j.x + k + BORDER, 0) = r;
+                img (j.y + BORDER, j.x + k + BORDER, 1) = g;
+                img (j.y + BORDER, j.x + k + BORDER, 2) = b;
+            }
+        }
+    }
+}
+
 void test1 ()
 {
     const double scale = 40.0;
@@ -104,7 +123,6 @@ void test1 ()
 
 void test2 ()
 {
-    const polygon screen { point (0, 0), point (w, 0), point (w, h), point (0, h) };
     const floret_pentagonal p;
     const double scale = 30.0;
     const double tw = scale * p.get_width ();
@@ -114,13 +132,26 @@ void test2 ()
     const polygons all_polys = get_tiled_polygons (locs, p.get_polygons (), scale, angle);
     init_image ();
     draw_polys (all_polys, {212, 212, 212});
-    polygons window_polys;
-    for (const auto &p : all_polys)
-        if (is_close (screen, p))
-            window_polys.push_back (p);
+    const polygons window_polys = get_overlapping_polygons (w, h, all_polys);
     draw_polys (window_polys, {100, 100, 100});
     draw_locs (locs, {255, 0, 0});
     draw_border ({200, 200, 255});
+    show_image ();
+}
+
+void test3 ()
+{
+    const floret_pentagonal p;
+    const double scale = 30.0;
+    const double tw = scale * p.get_width ();
+    const double th = scale * p.get_height ();
+    const double angle = 10.0;
+    const auto locs = get_tile_locations (h, w, point (w / 2.0, h / 2.0), tw, th, angle, p.is_triangular ());
+    const polygons all_polys = get_tiled_polygons (locs, p.get_polygons (), scale, angle);
+    const polygons window_polys = get_overlapping_polygons (w, h, all_polys);
+    const polygon_scanlines ps = get_clipped_scanlines (w, h, window_polys);
+    init_image ();
+    draw_scanlines (ps);
     show_image ();
 }
 
@@ -128,12 +159,10 @@ int main ()
 {
     try
     {
-        clog << "test0" << endl;
         test0 ();
-        clog << "test1" << endl;
         test1 ();
-        clog << "test2" << endl;
         test2 ();
+        test3 ();
 
         return 0;
     }
