@@ -10,4 +10,13 @@ waf:
 check: waf
 	$(MAKE) -C tests
 
-run: check
+run: waf
+	./build/debug/image_tiler -h
+	./build/debug/image_tiler -l
+	./build/debug/image_tiler --list
+	#./build/debug/image_tiler image.jpg > /dev/null
+	#./build/debug/image_tiler --tile-index 10 image.jpg > /dev/null
+	#./build/debug/image_tiler --scale 50.5 image.jpg > /dev/null
+	#./build/debug/image_tiler --angle 10 image.jpg > /dev/null
+	./build/debug/image_tiler -t 10 -s 75 -a 10 image.jpg > tmp.html
+	google-chrome tmp.html
