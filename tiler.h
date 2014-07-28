@@ -70,10 +70,10 @@ polygons get_tiled_polygons (const points &tile_locations, const polygons &polys
     polygons all_polys;
 
     // for each tile location
-    for (auto offset : tile_locations)
+    for (const auto &offset : tile_locations)
     {
         // get a copy of each polygon
-        for (auto tile_poly : polys)
+        for (const auto &tile_poly : polys)
         {
             // convert to window coordinates
             // save off the transformed poly
@@ -88,30 +88,25 @@ polygons get_overlapping_polygons (const unsigned w, const unsigned h, const pol
     // get the clipping boundary
     const polygon window { point (0, 0), point (w, 0), point (w, h), point (0, h) };
     polygons l;
-    for (const auto &i : p)
-        if (is_close (window, i))
-            l.push_back (i);
+    // copy to l if they are close enough
+    copy_if (p.begin (), p.end (), back_inserter (l),
+        [&window] (const polygon &a)
+        {
+            return is_close (window, a);
+        });
     return l;
 }
 
 typedef std::vector<scanlines> polygon_scanlines;
 
-polygon_scanlines get_clipped_scanlines (const unsigned w, const unsigned h, const polygons &p)
+polygon_scanlines get_polygon_scanlines (const polygons &p)
 {
-    // get the clipping boundary
-    const rect window { 0, 0, w, h };
     polygon_scanlines ps;
-    for (const auto &i : p)
-    {
-        // get all the scanlines in the polygon
-        scanlines s = get_convex_polygon_scanlines (i);
-        // scanlines should already be in ascending order for good cache usage
-        // clip the scanlines to the window
-        s = clip (s, window);
-        // save them
-        if (!s.empty ())
-            ps.push_back (s);
-    }
+    transform (p.begin (), p.end (), back_inserter (ps),
+        [] (const polygon &a)
+        {
+            return get_convex_polygon_scanlines (a);
+        });
     return ps;
 }
 
