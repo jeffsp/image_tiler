@@ -197,7 +197,8 @@ scanlines clip (const scanlines &s, const rect &r)
     return s2;
 }
 
-unsigned get_mean (const grayscale8_image_t &img, const scanlines &s)
+template<typename T>
+unsigned get_mean (const T &img, const scanlines &s, const size_t channel)
 {
     if (s.empty ())
         return 0;
@@ -208,7 +209,7 @@ unsigned get_mean (const grayscale8_image_t &img, const scanlines &s)
         for (int x = i.x; x < static_cast<int> (i.x + i.len); ++x)
         {
             ++total;
-            sum += img (i.y, x, 0);
+            sum += img (i.y, x, channel);
         }
     }
     unsigned p = ::round (static_cast<double> (sum) / total);
@@ -216,9 +217,11 @@ unsigned get_mean (const grayscale8_image_t &img, const scanlines &s)
     return p;
 }
 
-void fill (const scanlines &s, grayscale8_image_t &img, unsigned p)
+template<typename T>
+void fill (T &img, const scanlines &s, unsigned p, const size_t channel)
 {
-    assert (!s.empty ());
+    if (s.empty ())
+        return;
     for (auto i : s)
     {
         assert (i.x >= 0);
@@ -228,7 +231,7 @@ void fill (const scanlines &s, grayscale8_image_t &img, unsigned p)
         for (size_t x = i.x; x < (i.x + i.len); ++x)
         {
             assert (x < img.cols ());
-            img (i.y, x) = p;
+            img (i.y, x, channel) = p;
         }
     }
 }
