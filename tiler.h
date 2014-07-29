@@ -72,11 +72,11 @@ polygons get_tiled_polygons (const points &tile_locations, const polygons &polys
     // for each tile location
     for (const auto &offset : tile_locations)
     {
-        // get a copy of each polygon
+        // for each polygon in a tile
         for (const auto &tile_poly : polys)
         {
             // convert to window coordinates
-            // save off the transformed poly
+            // save off a transformed poly
             all_polys.push_back (affine (tile_poly, scale, scale, angle, offset));
         }
     }
@@ -101,8 +101,8 @@ typedef std::vector<scanlines> polygon_scanlines;
 
 polygon_scanlines get_polygon_scanlines (const polygons &p)
 {
-    polygon_scanlines ps;
-    transform (p.begin (), p.end (), back_inserter (ps),
+    polygon_scanlines ps (p.size ());
+    transform (p.begin (), p.end (), ps.begin (),
         [] (const polygon &a)
         {
             return get_convex_polygon_scanlines (a);
@@ -114,8 +114,8 @@ polygon_scanlines clip_scanlines (const unsigned w, const unsigned h, const poly
 {
     // get the clipping boundary
     const rect window { 0, 0, w, h };
-    polygon_scanlines ps;
-    transform (s.begin (), s.end (), back_inserter (ps),
+    polygon_scanlines ps (s.size ());
+    transform (s.begin (), s.end (), ps.begin (),
         [&] (const scanlines &a)
         {
             // clip the scanlines to the window
