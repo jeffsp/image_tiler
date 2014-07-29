@@ -50,15 +50,6 @@ void write_svg (ostream &s, const size_t w, const size_t h, const polygons &wp, 
     s << "</html>" << endl;
 }
 
-void write_jpg (const string &fn, const size_t w, const size_t h, const polygon_scanlines &ps, const vector<rgb8_pixel_t> &m)
-{
-    rgb8_image_t img (h, w);
-    for (size_t i = 0; i < ps.size (); ++i)
-        for (auto j : { 0, 1, 2})
-            fill (img, ps[i], m[i][j], j);
-    write_image (fn, img);
-}
-
 polygons get_window_polys (const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
 {
     // get locations
@@ -74,7 +65,16 @@ polygons get_window_polys (const rgb8_image_t &img, const convex_uniform_tile &t
     return window_polys;
 }
 
-void process (const string &fn, const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
+struct tile
+{
+    rgb8_pixel_t m;
+    scanlines s;
+    polygon p;
+};
+
+typedef vector<tile> tiles;
+
+tiles get_tiles (const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
 {
     const polygons window_polys = get_window_polys (img, t, scale, angle);
     clog << window_polys.size () << " clipped polygons" << endl;
@@ -86,9 +86,25 @@ void process (const string &fn, const rgb8_image_t &img, const convex_uniform_ti
     for (size_t i = 0; i < m.size (); ++i)
         for (auto j : { 0, 1, 2 })
             m[i][j] = get_mean (img, ps[i], j);
-    //write_svg (s, img.cols (), img.rows (), window_polys, m);
-    write_jpg (fn, img.cols (), img.rows (), ps, m);
+    tiles tiles (m.size ());
+    for (size_t i = 0; i < m.size (); ++i)
+    {
+        tiles[i].m = m[i];
+        tiles[i].s = ps[i];
+        tiles[i].p = window_polys[i];
+    }
+    return tiles;
 }
+
+void write_jpg (const string &fn, const size_t w, const size_t h, const tiles &tiles)
+{
+    rgb8_image_t img (h, w);
+    for (size_t i = 0; i < tiles.size (); ++i)
+        for (auto j : { 0, 1, 2})
+            fill (img, tiles[i].s, tiles[i].m[j], j);
+    write_image (fn, img);
+}
+
 
 int main (int argc, char **argv)
 {
@@ -169,7 +185,9 @@ int main (int argc, char **argv)
         clog << "height " << img.rows () << endl;
 
         clog << "writing to " << output_fn << endl;
-        process (output_fn, img, tl[tile_index], scale, angle);
+        tiles tiles = get_tiles (img, tl[tile_index], scale, angle);
+        write_jpg (output_fn, img.cols (), img.rows (), tiles);
+        //write_svg (s, img.cols (), img.rows (), window_polys, m);
 
         return 0;
     }
