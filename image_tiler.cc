@@ -13,43 +13,6 @@ using namespace image_tiler;
 
 const string usage = "usage: image_tiler ...";
 
-void write_svg (ostream &s, const size_t w, const size_t h, const polygons &wp, const vector<rgb8_pixel_t> &m)
-{
-    // write svg header
-    s << "<!DOCTYPE html>" << endl;
-    s << "<html>" << endl;
-    s << "<style>" << endl;
-    s << "svg" << endl;
-    s << "{ padding: 0px; margin:0px;}" << endl;
-    s << "</style>" << endl;
-    s << "<body>" << endl;
-    s << "<svg currentScale=\"1.0\" width=\"" << w << "\" height=\"" << h << "\" viewBox=\"0 0 " << w << " " << h << "\">" << endl;
-    for (size_t i = 0; i < wp.size (); ++i)
-    {
-        // write svg polygon
-        s << "<polygon points=\"";
-        for (const auto &j : wp[i])
-            //s << " " << ::round (j.x) << ',' << ::round (j.y);
-            s << " " << j.x << ',' << j.y;
-        stringstream color;
-        color << "#"
-            << hex
-            << setfill ('0') << setw (2) << static_cast<int> (m[i][0])
-            << setfill ('0') << setw (2) << static_cast<int> (m[i][1])
-            << setfill ('0') << setw (2) << static_cast<int> (m[i][2]);
-        s << "\" style=\"stroke:"
-            << color.str ()
-            << ";stroke-width:1px;fill:"
-            << color.str ()
-            << ";\" />"
-            << endl;
-    }
-    s << "Sorry, your browser does not support inline SVG." << endl;
-    s << "</svg>" << endl;
-    s << "</body>" << endl;
-    s << "</html>" << endl;
-}
-
 polygons get_window_polys (const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
 {
     // get locations
@@ -105,6 +68,42 @@ void write_jpg (const string &fn, const size_t w, const size_t h, const tiles &t
     write_image (fn, img);
 }
 
+void write_svg (ostream &s, const size_t w, const size_t h, const tiles &tiles)
+{
+    // write svg header
+    s << "<!DOCTYPE html>" << endl;
+    s << "<html>" << endl;
+    s << "<style>" << endl;
+    s << "svg" << endl;
+    s << "{ padding: 0px; margin:0px;}" << endl;
+    s << "</style>" << endl;
+    s << "<body>" << endl;
+    s << "<svg currentScale=\"1.0\" width=\"" << w << "\" height=\"" << h << "\" viewBox=\"0 0 " << w << " " << h << "\">" << endl;
+    for (size_t i = 0; i < tiles.size (); ++i)
+    {
+        // write svg polygon
+        s << "<polygon points=\"";
+        for (const auto &j : tiles[i].p)
+            //s << " " << ::round (j.x) << ',' << ::round (j.y);
+            s << " " << j.x << ',' << j.y;
+        stringstream color;
+        color << "#"
+            << hex
+            << setfill ('0') << setw (2) << static_cast<int> (tiles[i].m[0])
+            << setfill ('0') << setw (2) << static_cast<int> (tiles[i].m[1])
+            << setfill ('0') << setw (2) << static_cast<int> (tiles[i].m[2]);
+        s << "\" style=\"stroke:"
+            << color.str ()
+            << ";stroke-width:1px;fill:"
+            << color.str ()
+            << ";\" />"
+            << endl;
+    }
+    s << "Sorry, your browser does not support inline SVG." << endl;
+    s << "</svg>" << endl;
+    s << "</body>" << endl;
+    s << "</html>" << endl;
+}
 
 int main (int argc, char **argv)
 {
@@ -187,7 +186,7 @@ int main (int argc, char **argv)
         clog << "writing to " << output_fn << endl;
         tiles tiles = get_tiles (img, tl[tile_index], scale, angle);
         write_jpg (output_fn, img.cols (), img.rows (), tiles);
-        //write_svg (s, img.cols (), img.rows (), window_polys, m);
+        write_svg (cout, img.cols (), img.rows (), tiles);
 
         return 0;
     }
