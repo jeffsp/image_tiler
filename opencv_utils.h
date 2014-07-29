@@ -123,6 +123,14 @@ rgb8_image_t read_image (const std::string &fn)
     return mat_to_image (m);
 }
 
+void write_image (const std::string &fn, const rgb8_image_t &img)
+{
+    cv::Mat m = image_to_mat (img);
+    if (m.depth () != CV_8U || m.channels () != 3)
+        throw std::runtime_error ("image is not 8 bit RGB");
+    cv::imwrite (fn, m);
+}
+
 }
 
 #endif
