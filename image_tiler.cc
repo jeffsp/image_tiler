@@ -13,12 +13,54 @@ using namespace image_tiler;
 
 const string usage = "usage: image_tiler ...";
 
-void process (ostream &s, const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
+void write_svg (ostream &s, const size_t w, const size_t h, const polygons &wp, const vector<rgb8_pixel_t> &m)
 {
-    // split into channels
-    grayscale8_image_t p[3];
-    for (auto i : { 0, 1, 2 })
-        p[i] = get_channel (img, i);
+    // write svg header
+    s << "<!DOCTYPE html>" << endl;
+    s << "<html>" << endl;
+    s << "<style>" << endl;
+    s << "svg" << endl;
+    s << "{ padding: 0px; margin:0px;}" << endl;
+    s << "</style>" << endl;
+    s << "<body>" << endl;
+    s << "<svg currentScale=\"1.0\" width=\"" << w << "\" height=\"" << h << "\" viewBox=\"0 0 " << w << " " << h << "\">" << endl;
+    for (size_t i = 0; i < wp.size (); ++i)
+    {
+        // write svg polygon
+        s << "<polygon points=\"";
+        for (const auto &j : wp[i])
+            //s << " " << ::round (j.x) << ',' << ::round (j.y);
+            s << " " << j.x << ',' << j.y;
+        stringstream color;
+        color << "#"
+            << hex
+            << setfill ('0') << setw (2) << static_cast<int> (m[i][0])
+            << setfill ('0') << setw (2) << static_cast<int> (m[i][1])
+            << setfill ('0') << setw (2) << static_cast<int> (m[i][2]);
+        s << "\" style=\"stroke:"
+            << color.str ()
+            << ";stroke-width:1px;fill:"
+            << color.str ()
+            << ";\" />"
+            << endl;
+    }
+    s << "Sorry, your browser does not support inline SVG." << endl;
+    s << "</svg>" << endl;
+    s << "</body>" << endl;
+    s << "</html>" << endl;
+}
+
+void write_jpg (const string &fn, const size_t w, const size_t h, const polygon_scanlines &ps, const vector<rgb8_pixel_t> &m)
+{
+    rgb8_image_t img (h, w);
+    for (size_t i = 0; i < ps.size (); ++i)
+        for (auto j : { 0, 1, 2})
+            fill (img, ps[i], m[i][j], j);
+    write_image (fn, img);
+}
+
+polygons get_window_polys (const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
+{
     // get locations
     const double tw = scale * t.get_width ();
     const double th = scale * t.get_height ();
@@ -29,62 +71,23 @@ void process (ostream &s, const rgb8_image_t &img, const convex_uniform_tile &t,
     clog << all_polys.size () << " unclipped polygons" << endl;
     // filter out tiles that don't overlap
     const polygons window_polys = get_overlapping_polygons (img.cols (), img.rows (), all_polys);
+    return window_polys;
+}
+
+void process (const string &fn, const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
+{
+    const polygons window_polys = get_window_polys (img, t, scale, angle);
     clog << window_polys.size () << " clipped polygons" << endl;
     // clip scanlines that don't overlap
     const polygon_scanlines ps = clip_scanlines (img.cols (), img.rows (), get_polygon_scanlines (window_polys));
     clog << ps.size () << " groups of scanlines" << endl;
-    // get mean values for each channel
-    vector<unsigned> mr (ps.size ());
-    vector<unsigned> mg (ps.size ());
-    vector<unsigned> mb (ps.size ());
-    for (size_t i = 0; i < window_polys.size (); ++i)
-    {
-        mr[i] = get_mean (p[0], ps[i]);
-        mg[i] = get_mean (p[1], ps[i]);
-        mb[i] = get_mean (p[2], ps[i]);
-    }
-    //transform (ps.begin (), ps.end (), mr.begin (), [&] (const scanlines &a) { return get_mean (p[0], a); });
-    //transform (ps.begin (), ps.end (), mg.begin (), [&] (const scanlines &a) { return get_mean (p[1], a); });
-    //transform (ps.begin (), ps.end (), mb.begin (), [&] (const scanlines &a) { return get_mean (p[2], a); });
-    // now window_polys contain the polygons, and mr, mg, and mb contain the mean values
-    assert (window_polys.size () == mr.size ());
-    assert (window_polys.size () == mg.size ());
-    assert (window_polys.size () == mb.size ());
-    // write svg header
-    s << "<!DOCTYPE html>" << endl;
-    s << "<html>" << endl;
-    s << "<style>" << endl;
-    s << "svg" << endl;
-    s << "{ padding: 0px; margin:0px;}" << endl;
-    s << "</style>" << endl;
-    s << "<body>" << endl;
-    s << "<svg currentScale=\"0.5\" width=\"" << img.cols () << "\" height=\"" << img.rows () << "\" viewBox=\"0 0 " << img.cols () << " " << img.rows () << "\">" << endl;
-    for (size_t i = 0; i < window_polys.size (); ++i)
-    {
-        // write svg polygon
-        s << "<polygon points=\"";
-        for (const auto &j : window_polys[i])
-            //s << " " << ::round (j.x) << ',' << ::round (j.y);
-            s << " " << j.x << ',' << j.y;
-        s << "\" style=\"stroke:#"
-            << hex
-            << setfill ('0') << setw (2) << mr[i]
-            << setfill ('0') << setw (2) << mg[i]
-            << setfill ('0') << setw (2) << mb[i]
-            << dec
-            << ";stroke-width:1px;fill:#"
-            << hex
-            << setfill ('0') << setw (2) << mr[i]
-            << setfill ('0') << setw (2) << mg[i]
-            << setfill ('0') << setw (2) << mb[i]
-            << dec
-            << ";\" />"
-            << endl;
-    }
-    s << "Sorry, your browser does not support inline SVG." << endl;
-    s << "</svg>" << endl;
-    s << "</body>" << endl;
-    s << "</html>" << endl;
+    // get mean pixel values
+    vector<rgb8_pixel_t> m (ps.size ());
+    for (size_t i = 0; i < m.size (); ++i)
+        for (auto j : { 0, 1, 2 })
+            m[i][j] = get_mean (img, ps[i], j);
+    //write_svg (s, img.cols (), img.rows (), window_polys, m);
+    write_jpg (fn, img.cols (), img.rows (), ps, m);
 }
 
 int main (int argc, char **argv)
@@ -95,7 +98,8 @@ int main (int argc, char **argv)
         unsigned tile_index = 10;
         double scale = 16.0;
         double angle = 10.0;
-        string fn;
+        string input_fn;
+        string output_fn;
 
         while (1)
         {
@@ -138,26 +142,34 @@ int main (int argc, char **argv)
             return 0;
         }
 
-        if (optind + 1 == argc)
-            fn = argv[optind];
+        clog << argc << endl;
+        clog << optind << endl;
+        if (optind < argc)
+            input_fn = argv[optind];
         else
-            throw runtime_error ("no filename specified");
+            throw runtime_error ("no input filename specified");
+
+        ++optind;
+
+        if (optind < argc)
+            output_fn = argv[optind];
+        else
+            throw runtime_error ("no output filename specified");
 
         clog << "tile " << tl[tile_index].get_name () << endl;
         clog << "scale " << scale << endl;
         clog << "angle " << angle << endl;
-        clog << "reading " << fn << endl;
+        clog << "reading " << input_fn << endl;
 
         if (tile_index >= tl.size ())
             throw runtime_error ("the tile index is invalid");
 
-        rgb8_image_t img = read_image (fn);
+        rgb8_image_t img = read_image (input_fn);
         clog << "width " << img.cols () << endl;
         clog << "height " << img.rows () << endl;
 
-        process (cout, img, tl[tile_index], scale, angle);
-
-        clog << "success" << endl;
+        clog << "writing to " << output_fn << endl;
+        process (output_fn, img, tl[tile_index], scale, angle);
 
         return 0;
     }
