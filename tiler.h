@@ -83,6 +83,16 @@ polygons get_tiled_polygons (const points &tile_locations, const polygons &polys
     return all_polys;
 }
 
+/// @brief get polygons that overlap a window
+///
+/// @param w width of window
+/// @param h height of window
+/// @param p polygons
+///
+/// @return  overlapping polys
+///
+/// The algorithm is guaranteed to get all overlapping polygons, but it may return some that don't overlap.  The
+/// non-overlapping ones' scanlines will get clipped, so the performance hit is minor.
 polygons get_overlapping_polygons (const unsigned w, const unsigned h, const polygons &p)
 {
     // get the clipping boundary
@@ -99,6 +109,11 @@ polygons get_overlapping_polygons (const unsigned w, const unsigned h, const pol
 
 typedef std::vector<scanlines> polygon_scanlines;
 
+/// @brief get raster scanlines associated with some polygons
+///
+/// @param p polygons
+///
+/// @return container of container of scanlines
 polygon_scanlines get_polygon_scanlines (const polygons &p)
 {
     polygon_scanlines ps (p.size ());
@@ -110,6 +125,13 @@ polygon_scanlines get_polygon_scanlines (const polygons &p)
     return ps;
 }
 
+/// @brief clip polygon scanlines to a window
+///
+/// @param w width of window
+/// @param h height of window
+/// @param s input polygon scanlines
+///
+/// @return clipped scanlines
 polygon_scanlines clip_scanlines (const unsigned w, const unsigned h, const polygon_scanlines &s)
 {
     // get the clipping boundary
