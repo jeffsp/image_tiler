@@ -66,7 +66,13 @@ void process (ostream &s, const rgb8_image_t &img, const convex_uniform_tile &t,
         for (const auto &j : window_polys[i])
             //s << " " << ::round (j.x) << ',' << ::round (j.y);
             s << " " << j.x << ',' << j.y;
-        s << "\" style=\"stroke:black;stroke-width:0px;fill:#"
+        s << "\" style=\"stroke:#"
+            << hex
+            << setfill ('0') << setw (2) << mr[i]
+            << setfill ('0') << setw (2) << mg[i]
+            << setfill ('0') << setw (2) << mb[i]
+            << dec
+            << ";stroke-width:1px;fill:#"
             << hex
             << setfill ('0') << setw (2) << mr[i]
             << setfill ('0') << setw (2) << mg[i]
