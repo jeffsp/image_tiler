@@ -19,4 +19,4 @@ run: waf
 	#./build/debug/image_tiler --scale 50.5 image1.jpg > /dev/null
 	#./build/debug/image_tiler --angle 10 image1.jpg > /dev/null
 	./build/debug/image_tiler -t 10 -s 50 -a 10 image2.jpg tmp.jpg > tmp.html
-	google-chrome tmp.jpg tmp.html
+	google-chrome tmp.jpg tmp.html image2.jpg
