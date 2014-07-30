@@ -28,16 +28,17 @@ polygons get_window_polys (const rgb8_image_t &img, const convex_uniform_tile &t
     return window_polys;
 }
 
-struct tile
+struct image_element
 {
-    rgb8_pixel_t m;
-    scanlines s;
     polygon p;
+    scanlines s;
+    rgb8_pixel_t m;
 };
 
-typedef vector<tile> tiles;
+typedef vector<image_element> image_elements;
+typedef vector<const image_element *> image_element_ptrs;
 
-tiles get_tiles (const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
+image_elements get_image_elements (const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
 {
     const polygons window_polys = get_window_polys (img, t, scale, angle);
     clog << window_polys.size () << " clipped polygons" << endl;
@@ -49,26 +50,26 @@ tiles get_tiles (const rgb8_image_t &img, const convex_uniform_tile &t, double s
     for (size_t i = 0; i < m.size (); ++i)
         for (auto j : { 0, 1, 2 })
             m[i][j] = get_mean (img, ps[i], j);
-    tiles tiles (m.size ());
+    image_elements e (m.size ());
     for (size_t i = 0; i < m.size (); ++i)
     {
-        tiles[i].m = m[i];
-        tiles[i].s = ps[i];
-        tiles[i].p = window_polys[i];
+        e[i].p = window_polys[i];
+        e[i].s = ps[i];
+        e[i].m = m[i];
     }
-    return tiles;
+    return e;
 }
 
-void write_jpg (const string &fn, const size_t w, const size_t h, const tiles &tiles)
+void write_jpg (const string &fn, const size_t w, const size_t h, const image_element_ptrs &pe, vector<size_t> color_map)
 {
     rgb8_image_t img (h, w);
-    for (size_t i = 0; i < tiles.size (); ++i)
+    for (size_t i = 0; i < pe.size (); ++i)
         for (auto j : { 0, 1, 2})
-            fill (img, tiles[i].s, tiles[i].m[j], j);
+            fill (img, pe[i]->s, pe[color_map[i]]->m[j], j);
     write_image (fn, img);
 }
 
-void write_svg (ostream &s, const size_t w, const size_t h, const tiles &tiles)
+void write_svg (ostream &s, const size_t w, const size_t h, const image_element_ptrs &pe, vector<size_t> color_map)
 {
     // write svg header
     s << "<!DOCTYPE html>" << endl;
@@ -79,19 +80,19 @@ void write_svg (ostream &s, const size_t w, const size_t h, const tiles &tiles)
     s << "</style>" << endl;
     s << "<body>" << endl;
     s << "<svg currentScale=\"1.0\" width=\"" << w << "\" height=\"" << h << "\" viewBox=\"0 0 " << w << " " << h << "\">" << endl;
-    for (size_t i = 0; i < tiles.size (); ++i)
+    for (size_t i = 0; i < pe.size (); ++i)
     {
         // write svg polygon
         s << "<polygon points=\"";
-        for (const auto &j : tiles[i].p)
+        for (const auto &j : pe[i]->p)
             //s << " " << ::round (j.x) << ',' << ::round (j.y);
             s << " " << j.x << ',' << j.y;
         stringstream color;
         color << "#"
             << hex
-            << setfill ('0') << setw (2) << static_cast<int> (tiles[i].m[0])
-            << setfill ('0') << setw (2) << static_cast<int> (tiles[i].m[1])
-            << setfill ('0') << setw (2) << static_cast<int> (tiles[i].m[2]);
+            << setfill ('0') << setw (2) << static_cast<int> (pe[color_map[i]]->m[0])
+            << setfill ('0') << setw (2) << static_cast<int> (pe[color_map[i]]->m[1])
+            << setfill ('0') << setw (2) << static_cast<int> (pe[color_map[i]]->m[2]);
         s << "\" style=\"stroke:"
             << color.str ()
             << ";stroke-width:1px;fill:"
@@ -104,6 +105,37 @@ void write_svg (ostream &s, const size_t w, const size_t h, const tiles &tiles)
     s << "</body>" << endl;
     s << "</html>" << endl;
 }
+
+struct sort_by_distance
+{
+    sort_by_distance (size_t cx, size_t cy) : cx (cx), cy (cy) { }
+    size_t cx;
+    size_t cy;
+    bool operator() (const image_element *a, const image_element *b) const
+    {
+        assert (a);
+        assert (b);
+        double dxa = cx - a->p[0].x;
+        double dya = cy - a->p[0].y;
+        double dxb = cx - b->p[0].x;
+        double dyb = cy - b->p[0].y;
+        double da = sqrt (dxa * dxa + dya * dya);
+        double db = sqrt (dxb * dxb + dyb * dyb);
+        return da < db;
+    }
+};
+
+struct sort_by_luminance
+{
+    sort_by_luminance (const image_element_ptrs &pe) : pe (pe) { }
+    const image_element_ptrs &pe;
+    bool operator() (const size_t &a, const size_t &b) const
+    {
+        const double la = pe[a]->m[0] * 0.6 + pe[a]->m[1] * 0.3 + pe[a]->m[2] * 0.1;
+        const double lb = pe[b]->m[0] * 0.6 + pe[b]->m[1] * 0.3 + pe[b]->m[2] * 0.1;
+        return la < lb;
+    }
+};
 
 int main (int argc, char **argv)
 {
@@ -182,11 +214,19 @@ int main (int argc, char **argv)
         rgb8_image_t img = read_image (input_fn);
         clog << "width " << img.cols () << endl;
         clog << "height " << img.rows () << endl;
-
+        const image_elements e = get_image_elements (img, tl[tile_index], scale, angle);
+        image_element_ptrs pe (e.size ());
+        size_t n = 0;
+        generate (pe.begin(), pe.end(), [&] { return &e[n++]; });
+        // sort pointers to elements
+        sort (pe.begin (), pe.end (), sort_by_distance (img.cols () / 2, img.rows () / 2));
+        vector<size_t> color_map (pe.size ());
+        n = 0;
+        generate (color_map.begin(), color_map.end(), [&] { return n++; });
+        sort (color_map.begin (), color_map.end (), sort_by_luminance (pe));
         clog << "writing to " << output_fn << endl;
-        tiles tiles = get_tiles (img, tl[tile_index], scale, angle);
-        write_jpg (output_fn, img.cols (), img.rows (), tiles);
-        write_svg (cout, img.cols (), img.rows (), tiles);
+        write_jpg (output_fn, img.cols (), img.rows (), pe, color_map);
+        write_svg (cout, img.cols (), img.rows (), pe, color_map);
 
         return 0;
     }
