@@ -7,6 +7,7 @@
 #include "image_tiler.h"
 #include <getopt.h>
 #include <iomanip>
+#include <fstream>
 
 using namespace std;
 using namespace image_tiler;
@@ -36,7 +37,6 @@ struct image_element
 };
 
 typedef vector<image_element> image_elements;
-typedef vector<const image_element *> image_element_ptrs;
 
 image_elements get_image_elements (const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
 {
@@ -60,39 +60,31 @@ image_elements get_image_elements (const rgb8_image_t &img, const convex_uniform
     return e;
 }
 
-void write_jpg (const string &fn, const size_t w, const size_t h, const image_element_ptrs &pe, vector<size_t> color_map)
+void write_jpg (const string &fn, const size_t w, const size_t h, const image_elements &e)
 {
     rgb8_image_t img (h, w);
-    for (size_t i = 0; i < pe.size (); ++i)
+    for (size_t i = 0; i < e.size (); ++i)
         for (auto j : { 0, 1, 2})
-            fill (img, pe[i]->s, pe[color_map[i]]->m[j], j);
+            fill (img, e[i].s, e[i].m[j], j);
     write_image (fn, img);
 }
 
-void write_svg (ostream &s, const size_t w, const size_t h, const image_element_ptrs &pe, vector<size_t> color_map)
+void write_svg (ostream &s, const size_t w, const size_t h, const image_elements &e)
 {
     // write svg header
-    s << "<!DOCTYPE html>" << endl;
-    s << "<html>" << endl;
-    s << "<style>" << endl;
-    s << "svg" << endl;
-    s << "{ padding: 0px; margin:0px;}" << endl;
-    s << "</style>" << endl;
-    s << "<body>" << endl;
     s << "<svg currentScale=\"1.0\" width=\"" << w << "\" height=\"" << h << "\" viewBox=\"0 0 " << w << " " << h << "\">" << endl;
-    for (size_t i = 0; i < pe.size (); ++i)
+    for (size_t i = 0; i < e.size (); ++i)
     {
         // write svg polygon
         s << "<polygon points=\"";
-        for (const auto &j : pe[i]->p)
-            //s << " " << ::round (j.x) << ',' << ::round (j.y);
+        for (const auto &j : e[i].p)
             s << " " << j.x << ',' << j.y;
         stringstream color;
         color << "#"
             << hex
-            << setfill ('0') << setw (2) << static_cast<int> (pe[color_map[i]]->m[0])
-            << setfill ('0') << setw (2) << static_cast<int> (pe[color_map[i]]->m[1])
-            << setfill ('0') << setw (2) << static_cast<int> (pe[color_map[i]]->m[2]);
+            << setfill ('0') << setw (2) << static_cast<int> (e[i].m[0])
+            << setfill ('0') << setw (2) << static_cast<int> (e[i].m[1])
+            << setfill ('0') << setw (2) << static_cast<int> (e[i].m[2]);
         s << "\" style=\"stroke:"
             << color.str ()
             << ";stroke-width:1px;fill:"
@@ -102,46 +94,37 @@ void write_svg (ostream &s, const size_t w, const size_t h, const image_element_
     }
     s << "Sorry, your browser does not support inline SVG." << endl;
     s << "</svg>" << endl;
-    s << "</body>" << endl;
-    s << "</html>" << endl;
 }
 
-struct sort_by_distance
+void write_json (ostream &s, const size_t w, const size_t h, const image_elements &e)
 {
-    sort_by_distance (size_t cx, size_t cy) : cx (cx), cy (cy) { }
-    size_t cx;
-    size_t cy;
-    bool operator() (const image_element *a, const image_element *b) const
-    {
-        assert (a);
-        assert (b);
-        double dxa = cx - a->p[0].x;
-        double dya = cy - a->p[0].y;
-        double dxb = cx - b->p[0].x;
-        double dyb = cy - b->p[0].y;
-        double da = sqrt (dxa * dxa + dya * dya);
-        double db = sqrt (dxb * dxb + dyb * dyb);
-        return da < db;
-    }
-};
+}
 
-struct sort_by_luminance
+void write_svg (const string &fn, const size_t w, const size_t h, const image_elements &e)
 {
-    sort_by_luminance (const image_element_ptrs &pe) : pe (pe) { }
-    const image_element_ptrs &pe;
-    bool operator() (const size_t &a, const size_t &b) const
-    {
-        const double la = pe[a]->m[0] * 0.6 + pe[a]->m[1] * 0.3 + pe[a]->m[2] * 0.1;
-        const double lb = pe[b]->m[0] * 0.6 + pe[b]->m[1] * 0.3 + pe[b]->m[2] * 0.1;
-        return la < lb;
-    }
-};
+    ofstream ofs (fn.c_str ());
+    if (!ofs)
+        throw runtime_error ("could not open file for writing");
+    write_svg (ofs, w, h, e);
+}
+
+void write_json (const string &fn, const size_t w, const size_t h, const image_elements &e)
+{
+    ofstream ofs (fn.c_str ());
+    if (!ofs)
+        throw runtime_error ("could not open file for writing");
+    write_json (ofs, w, h, e);
+}
 
 int main (int argc, char **argv)
 {
     try
     {
+        // output file type
+        enum class of { svg, jpeg, json } output_format = of::jpeg;
+        // show list of tiles
         bool list = false;
+        // other options
         unsigned tile_index = 10;
         double scale = 16.0;
         double angle = 10.0;
@@ -153,6 +136,9 @@ int main (int argc, char **argv)
             int option_index = 0;
             static struct option long_options[] = {
                 {"help", no_argument, 0,  'h' },
+                {"json", no_argument, 0,  'x' },
+                {"jpeg",  no_argument, 0,  'j' },
+                {"svg",  no_argument, 0,  'v' },
                 {"list", no_argument, 0,  'l' },
                 {"tile-index", required_argument, 0,  't' },
                 {"scale", required_argument, 0,  's' },
@@ -160,7 +146,7 @@ int main (int argc, char **argv)
                 {0,      0,           0,  0 }
             };
 
-            int c = getopt_long(argc, argv, "hlt:s:a:", long_options, &option_index);
+            int c = getopt_long(argc, argv, "hxjvlt:s:a:", long_options, &option_index);
             if (c == -1)
                 break;
 
@@ -174,6 +160,9 @@ int main (int argc, char **argv)
 
                     return 0;
                 case 'l': list = true; break;
+                case 'j': output_format = of::jpeg; break;
+                case 'x': output_format = of::json; break;
+                case 'v': output_format = of::svg; break;
                 case 't': tile_index = atoi (optarg); break;
                 case 's': scale = atof (optarg); break;
                 case 'a': angle = atof (optarg); break;
@@ -189,8 +178,20 @@ int main (int argc, char **argv)
             return 0;
         }
 
-        clog << argc << endl;
-        clog << optind << endl;
+        switch (output_format)
+        {
+            default: throw runtime_error ("Unknown output type");
+            case of::jpeg:
+            clog << "output_format: " << "jpeg" << endl;
+            break;
+            case of::svg:
+            clog << "output_format: " << "svg" << endl;
+            break;
+            case of::json:
+            clog << "output_format: " << "json" << endl;
+            break;
+        }
+
         if (optind < argc)
             input_fn = argv[optind];
         else
@@ -215,24 +216,20 @@ int main (int argc, char **argv)
         clog << "width " << img.cols () << endl;
         clog << "height " << img.rows () << endl;
         const image_elements e = get_image_elements (img, tl[tile_index], scale, angle);
-        image_element_ptrs pe (e.size ());
-        size_t n = 0;
-        generate (pe.begin(), pe.end(), [&] { return &e[n++]; });
-        // sort pointers to elements
-        sort (pe.begin (), pe.end (), sort_by_distance (img.cols () / 2, img.rows () / 2));
-        vector<size_t> color_map (pe.size ());
-        n = 0;
-        generate (color_map.begin(), color_map.end(), [&] { return n++; });
-        sort (color_map.begin (), color_map.end (), sort_by_luminance (pe));
         clog << "writing to " << output_fn << endl;
-        write_jpg (output_fn, img.cols (), img.rows (), pe, color_map);
-        write_svg (cout, img.cols (), img.rows (), pe, color_map);
+        switch (output_format)
+        {
+            default: throw runtime_error ("Unknown output type");
+            case of::jpeg: write_jpg (output_fn, img.cols (), img.rows (), e); break;
+            case of::svg: write_svg (output_fn, img.cols (), img.rows (), e); break;
+            case of::json: write_json (output_fn, img.cols (), img.rows (), e); break;
+        }
 
         return 0;
     }
     catch (const exception &e)
     {
         cerr << e.what () << endl;
-        return -1;
     }
+    return -1;
 }
