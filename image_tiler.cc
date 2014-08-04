@@ -96,10 +96,6 @@ void write_svg (ostream &s, const size_t w, const size_t h, const image_elements
     s << "</svg>" << endl;
 }
 
-void write_json (ostream &s, const size_t w, const size_t h, const image_elements &e)
-{
-}
-
 void write_svg (const string &fn, const size_t w, const size_t h, const image_elements &e)
 {
     ofstream ofs (fn.c_str ());
@@ -108,20 +104,12 @@ void write_svg (const string &fn, const size_t w, const size_t h, const image_el
     write_svg (ofs, w, h, e);
 }
 
-void write_json (const string &fn, const size_t w, const size_t h, const image_elements &e)
-{
-    ofstream ofs (fn.c_str ());
-    if (!ofs)
-        throw runtime_error ("could not open file for writing");
-    write_json (ofs, w, h, e);
-}
-
 int main (int argc, char **argv)
 {
     try
     {
         // output file type
-        enum class of { svg, jpeg, json } output_format = of::jpeg;
+        enum class of { svg, jpeg } output_format = of::jpeg;
         // show list of tiles
         bool list = false;
         // other options
@@ -136,8 +124,7 @@ int main (int argc, char **argv)
             int option_index = 0;
             static struct option long_options[] = {
                 {"help", no_argument, 0,  'h' },
-                {"json", no_argument, 0,  'x' },
-                {"jpeg",  no_argument, 0,  'j' },
+                {"jpeg", no_argument, 0,  'j' },
                 {"svg",  no_argument, 0,  'v' },
                 {"list", no_argument, 0,  'l' },
                 {"tile-index", required_argument, 0,  't' },
@@ -146,11 +133,12 @@ int main (int argc, char **argv)
                 {0,      0,           0,  0 }
             };
 
-            int c = getopt_long(argc, argv, "hxjvlt:s:a:", long_options, &option_index);
+            int c = getopt_long(argc, argv, "hjvlt:s:a:", long_options, &option_index);
             if (c == -1)
                 break;
 
             switch (c) {
+                default:
                 case 0:
                 case 'h':
                     printf("option %s", long_options[option_index].name);
@@ -161,7 +149,6 @@ int main (int argc, char **argv)
                     return 0;
                 case 'l': list = true; break;
                 case 'j': output_format = of::jpeg; break;
-                case 'x': output_format = of::json; break;
                 case 'v': output_format = of::svg; break;
                 case 't': tile_index = atoi (optarg); break;
                 case 's': scale = atof (optarg); break;
@@ -186,9 +173,6 @@ int main (int argc, char **argv)
             break;
             case of::svg:
             clog << "output_format: " << "svg" << endl;
-            break;
-            case of::json:
-            clog << "output_format: " << "json" << endl;
             break;
         }
 
@@ -222,7 +206,6 @@ int main (int argc, char **argv)
             default: throw runtime_error ("Unknown output type");
             case of::jpeg: write_jpg (output_fn, img.cols (), img.rows (), e); break;
             case of::svg: write_svg (output_fn, img.cols (), img.rows (), e); break;
-            case of::json: write_json (output_fn, img.cols (), img.rows (), e); break;
         }
 
         return 0;

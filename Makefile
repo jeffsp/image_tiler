@@ -31,6 +31,4 @@ run: waf
 	echo "</html>" >> tmp.html
 	# create jpg
 	./build/debug/image_tiler --jpeg -t 10 -s 30 -a 10 image2.jpg tmp.jpg
-	# create json
-	./build/debug/image_tiler --json -t 10 -s 30 -a 10 image2.jpg tmp.json
-	#google-chrome tmp.jpg tmp.html image2.jpg
+	google-chrome tmp.jpg tmp.html image2.jpg
