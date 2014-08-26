@@ -12,7 +12,7 @@
 using namespace std;
 using namespace image_tiler;
 
-const string usage = "usage: image_tiler ...";
+const string usage = "image_tiler [options] <infile> <outfile>";
 
 polygons get_window_polys (const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
 {
@@ -141,12 +141,21 @@ int main (int argc, char **argv)
                 default:
                 case 0:
                 case 'h':
-                    printf("option %s", long_options[option_index].name);
-                    if (optarg)
-                        printf(" with arg %s", optarg);
-                    printf("\n");
-
+                {
+                    clog << "usage:" << endl << '\t' << usage << endl << endl;
+                    clog << "options:" << endl;
+                    for (size_t i = 0; i + 1 < sizeof (long_options) / sizeof (struct option); ++i)
+                    {
+                        clog << "\t--" << long_options[i].name << "|-" << char (long_options[i].val);
+                        if (long_options[i].has_arg)
+                            clog << " <arg>" << endl;
+                        else
+                            clog << endl;
+                    }
+                    if (c != 'h')
+                        throw runtime_error ("invalid option");
                     return 0;
+                }
                 case 'l': list = true; break;
                 case 'j': output_format = of::jpeg; break;
                 case 'v': output_format = of::svg; break;
