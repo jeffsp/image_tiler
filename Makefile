@@ -14,21 +14,19 @@ run: waf
 	./build/debug/image_tiler -h
 	./build/debug/image_tiler -l
 	./build/debug/image_tiler --list
-	#./build/debug/image_tiler image1.jpg > /dev/null
-	#./build/debug/image_tiler --tile-index 10 image1.jpg > /dev/null
-	#./build/debug/image_tiler --scale 50.5 image1.jpg > /dev/null
-	#./build/debug/image_tiler --angle 10 image1.jpg > /dev/null
+	./build/debug/image_tiler --tile-index 10 --angle 45 --scale 50 image1.jpg tmp1.jpg
+	open tmp1.jpg
 	# create html containing fullpage svg
-	./build/debug/image_tiler -v -t 10 -s 30 -a 10 image2.jpg tmp.svg
-	echo "<!DOCTYPE html>" > tmp.html
-	echo "<html>" >> tmp.html
-	echo "<style>" >> tmp.html
-	echo "svg { padding: 0px; margin:0px;}" >> tmp.html
-	echo "</style>" >> tmp.html
-	echo "<body>" >> tmp.html
-	cat tmp.svg >> tmp.html
-	echo "</body>" >> tmp.html
-	echo "</html>" >> tmp.html
+	./build/debug/image_tiler -v -t 10 -s 30 -a 10 image2.jpg tmp2.svg
+	echo "<!DOCTYPE html>" > tmp2.html
+	echo "<html>" >> tmp2.html
+	echo "<style>" >> tmp2.html
+	echo "svg { padding: 0px; margin:0px;}" >> tmp2.html
+	echo "</style>" >> tmp2.html
+	echo "<body>" >> tmp2.html
+	cat tmp2.svg >> tmp2.html
+	echo "</body>" >> tmp2.html
+	echo "</html>" >> tmp2.html
 	# create jpg
-	./build/debug/image_tiler --jpeg -t 10 -s 30 -a 10 image2.jpg tmp.jpg
-	google-chrome tmp.jpg tmp.html image2.jpg
+	./build/debug/image_tiler --jpeg -t 10 -s 30 -a 10 image2.jpg tmp2.jpg
+	open tmp2.html

@@ -5,7 +5,15 @@ out = 'build'
 # global definitions
 SOURCES='*.cc'
 CXXFLAGS=['-fopenmp','-Wall','-Werror','-std=c++0x']
-LIBS=['gomp','rt','opencv_core','opencv_highgui','opencv_imgproc','opencv_objdetect']
+
+import sys
+
+if sys.platform.startswith('darwin'):
+    LIBS=['gomp','opencv_core','opencv_highgui','opencv_imgproc','opencv_objdetect']
+    LIBPATH=['/opt/local/lib']
+else:
+    LIBS=['gomp','rt','opencv_core','opencv_highgui','opencv_imgproc','opencv_objdetect']
+    LIBPATH=['']
 
 # variant specific build flags
 DEBUG_CXXFLAGS=CXXFLAGS+['-g']
@@ -49,4 +57,4 @@ def build(ctx):
     else:
         # the executable name is the filename without the extension
         for s in ctx.env.SOURCES:
-            ctx.program(source=s,target=s.replace('.cc',''),lib=LIBS)
+            ctx.program(source=s,target=s.replace('.cc',''),lib=LIBS,libpath=LIBPATH)
