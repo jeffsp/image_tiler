@@ -6,8 +6,6 @@
 
 #include "image_tiler.h"
 #include <getopt.h>
-#include <iomanip>
-#include <fstream>
 
 using namespace std;
 using namespace image_tiler;
@@ -20,10 +18,10 @@ polygons get_window_polys (const rgb8_image_t &img, const convex_uniform_tile &t
     const double tw = scale * t.get_width ();
     const double th = scale * t.get_height ();
     const auto locs = get_tile_locations (img.rows (), img.cols (), point (img.cols () / 2.0, img.rows () / 2.0), tw, th, angle, t.is_triangular ());
-    clog << locs.size () << " tiles locations" << endl;
+    std::clog << locs.size () << " tiles locations" << std::endl;
     // get the polygons
     const polygons all_polys = get_tiled_polygons (locs, t.get_polygons (), scale, angle);
-    clog << all_polys.size () << " unclipped polygons" << endl;
+    std::clog << all_polys.size () << " unclipped polygons" << std::endl;
     // filter out tiles that don't overlap
     const polygons window_polys = get_overlapping_polygons (img.cols (), img.rows (), all_polys);
     return window_polys;
@@ -36,17 +34,17 @@ struct image_element
     rgb8_pixel_t m;
 };
 
-typedef vector<image_element> image_elements;
+typedef std::vector<image_element> image_elements;
 
 image_elements get_image_elements (const rgb8_image_t &img, const convex_uniform_tile &t, double scale, double angle)
 {
     const polygons window_polys = get_window_polys (img, t, scale, angle);
-    clog << window_polys.size () << " clipped polygons" << endl;
+    std::clog << window_polys.size () << " clipped polygons" << std::endl;
     // clip scanlines that don't overlap
     const polygon_scanlines ps = clip_scanlines (img.cols (), img.rows (), get_polygon_scanlines (window_polys));
-    clog << ps.size () << " groups of scanlines" << endl;
+    std::clog << ps.size () << " groups of scanlines" << std::endl;
     // get mean pixel values
-    vector<rgb8_pixel_t> m (ps.size ());
+    std::vector<rgb8_pixel_t> m (ps.size ());
     for (size_t i = 0; i < m.size (); ++i)
         for (auto j : { 0, 1, 2 })
             m[i][j] = get_mean (img, ps[i], j);
@@ -60,7 +58,7 @@ image_elements get_image_elements (const rgb8_image_t &img, const convex_uniform
     return e;
 }
 
-void write_jpg (const string &fn, const size_t w, const size_t h, const image_elements &e)
+void write_jpg (const std::string &fn, const size_t w, const size_t h, const image_elements &e)
 {
     rgb8_image_t img (h, w);
     for (size_t i = 0; i < e.size (); ++i)
@@ -69,38 +67,38 @@ void write_jpg (const string &fn, const size_t w, const size_t h, const image_el
     write_image (fn, img);
 }
 
-void write_svg (ostream &s, const size_t w, const size_t h, const image_elements &e)
+void write_svg (std::ostream &s, const size_t w, const size_t h, const image_elements &e)
 {
     // write svg header
-    s << "<svg currentScale=\"1.0\" width=\"" << w << "\" height=\"" << h << "\" viewBox=\"0 0 " << w << " " << h << "\">" << endl;
+    s << "<svg currentScale=\"1.0\" width=\"" << w << "\" height=\"" << h << "\" viewBox=\"0 0 " << w << " " << h << "\">" << std::endl;
     for (size_t i = 0; i < e.size (); ++i)
     {
         // write svg polygon
         s << "<polygon points=\"";
         for (const auto &j : e[i].p)
             s << " " << j.x << ',' << j.y;
-        stringstream color;
+        std::stringstream color;
         color << "#"
-            << hex
-            << setfill ('0') << setw (2) << static_cast<int> (e[i].m[0])
-            << setfill ('0') << setw (2) << static_cast<int> (e[i].m[1])
-            << setfill ('0') << setw (2) << static_cast<int> (e[i].m[2]);
+            << std::hex
+            << std::setfill ('0') << std::setw (2) << static_cast<int> (e[i].m[0])
+            << std::setfill ('0') << std::setw (2) << static_cast<int> (e[i].m[1])
+            << std::setfill ('0') << std::setw (2) << static_cast<int> (e[i].m[2]);
         s << "\" style=\"stroke:"
             << color.str ()
             << ";stroke-width:1px;fill:"
             << color.str ()
             << ";\" />"
-            << endl;
+            << std::endl;
     }
-    s << "Sorry, your browser does not support inline SVG." << endl;
-    s << "</svg>" << endl;
+    s << "Sorry, your browser does not support inline SVG." << std::endl;
+    s << "</svg>" << std::endl;
 }
 
-void write_svg (const string &fn, const size_t w, const size_t h, const image_elements &e)
+void write_svg (const std::string &fn, const size_t w, const size_t h, const image_elements &e)
 {
-    ofstream ofs (fn.c_str ());
+    std::ofstream ofs (fn.c_str ());
     if (!ofs)
-        throw runtime_error ("could not open file for writing");
+        throw std::runtime_error ("could not open file for writing");
     write_svg (ofs, w, h, e);
 }
 

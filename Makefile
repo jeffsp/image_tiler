@@ -1,7 +1,8 @@
 CCFILES=$(shell ls -1tr *.cc)
 TARGETS=$(basename $(CCFILES))
 
-default: run
+default: waf
+	./build/debug/image_tiler_interactive image2.jpg
 
 waf:
 	waf configure
