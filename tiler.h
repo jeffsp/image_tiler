@@ -39,9 +39,9 @@ points get_tile_locations (const size_t rows,
     rectf r = get_bounding_rectf (w);
     // if the tiles are layed out triangularly, odd numbered rows have an x offset of -0.5
     const double odd_offset = is_triangular ? 0.5 : 0.0;
-    // get all points in tile coordinates that overlap with the window
+    // get all points in tile coordinates that intersect with the window
     //
-    // also, pad the overlapping rectable by one unit in all directions because tiles don't always cover a complete
+    // also, pad the intersecting rectable by one unit in all directions because tiles don't always cover a complete
     // rectangle
     points p;
     for (double i = floor (r.miny) - 1.0; i < r.maxy + 1.0; i += 1.0)
@@ -83,17 +83,17 @@ polygons get_tiled_polygons (const points &tile_locations, const polygons &polys
     return all_polys;
 }
 
-/// @brief get polygons that overlap a window
+/// @brief get polygons that intersect a window
 ///
 /// @param w width of window
 /// @param h height of window
 /// @param p polygons
 ///
-/// @return  overlapping polys
+/// @return  intersecting polys
 ///
-/// The algorithm is guaranteed to get all overlapping polygons, but it may return some that don't overlap.  The
-/// non-overlapping ones' scanlines will get clipped, so the performance hit is minor.
-polygons get_overlapping_polygons (const unsigned w, const unsigned h, const polygons &p)
+/// The algorithm is guaranteed to get all intersecting polygons, but it may return some that don't intersect.  The
+/// non-intersecting ones' scanlines will get clipped, so the performance hit is minor.
+polygons get_intersecting_polygons (const unsigned w, const unsigned h, const polygons &p)
 {
     // get the clipping boundary
     const polygon window { point (0, 0), point (w, 0), point (w, h), point (0, h) };

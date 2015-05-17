@@ -58,7 +58,6 @@ int main (int argc, char **argv)
 
         tile_list tl = create_tile_list ();
 
-        int ch = -1;
         const char *window_name = "Image Tiler";
         int tile_number = 10;
         bool outline = false;
@@ -66,15 +65,18 @@ int main (int argc, char **argv)
         double angle = 0.0;
         double xoffset = 0;
         double yoffset = 0;
-        while (ch != 27)
+        bool randomize = false;
+        bool done = false;
+
+        while (!done)
         {
             const convex_uniform_tile p = tl[tile_number];
             const double tw = scale * p.get_width ();
             const double th = scale * p.get_height ();
             const auto locs = get_tile_locations (h, w, point (xoffset + w / 2.0, yoffset + h / 2.0), tw, th, angle, p.is_triangular ());
-            const polygons all_polys = get_tiled_polygons (locs, p.get_polygons (), scale, angle);
-            const polygons window_polys = get_overlapping_polygons (w, h, all_polys);
-            const polygon_scanlines ps = clip_scanlines (w, h, get_polygon_scanlines (window_polys));
+            const auto all_polys = get_tiled_polygons (locs, p.get_polygons (), scale, angle);
+            const auto window_polys = get_intersecting_polygons (w, h, all_polys);
+            const auto ps = clip_scanlines (w, h, get_polygon_scanlines (window_polys));
 
             // get mean pixel values
             std::vector<rgb8_pixel_t> m (ps.size ());
@@ -89,30 +91,44 @@ int main (int argc, char **argv)
                 e[i].m = m[i];
             }
 
+            // Randomize tile colors
+            if (randomize)
+            {
+                // shuffle the colors
+                for (auto element : e)
+                {
+                    size_t index = rand () % e.size ();
+                    swap (element.m, e[index].m);
+                }
+            }
+
             rgb8_image_t img (h, w);
             for (size_t i = 0; i < e.size (); ++i)
-                for (auto j : { 0, 1, 2})
+                for (auto j : {0, 1, 2})
                     fill (img, e[i].s, e[i].m[j], j);
 
             if (outline)
                 img = draw_polys (img, all_polys, {212, 212, 212});
 
             cv::imshow (window_name, image_to_mat (img));
-            ch = cv::waitKey (0);
+            int ch = cv::waitKey (0);
 
             switch (ch)
             {
+                case 'q':
+                case 27: done = true;
                 case 32: { tile_number = (tile_number + 1) % tl.size (); } break;
                 case 'l': { outline = !outline; } break;
-                case 'q': { angle += 1; } break;
-                case 'a': { angle -= 1; } break;
-                case 'w': { scale += 10; } break;
-                case 's': { scale = scale > 20 ? scale - 10 : 10; } break;
-                case 'e': { xoffset += 1; } break;
-                case 'd': { xoffset -= 1; } break;
-                case 'r': { yoffset += 1; } break;
-                case 'f': { yoffset -= 1; } break;
-                case 'o':
+                case 'r': { randomize = !randomize; } break;
+                case 'A': { angle -= 1; } break;
+                case 'a': { angle += 1; } break;
+                case 'S': { scale = scale > 20 ? scale - 10 : 10; } break;
+                case 's': { scale += 10; } break;
+                case 'X': { xoffset -= 1; } break;
+                case 'x': { xoffset += 1; } break;
+                case 'Y': { yoffset -= 1; } break;
+                case 'y': { yoffset += 1; } break;
+                case 'w':
                 {
                     const string output_fn = "out.png";
                     clog << "writing to " << output_fn << endl;

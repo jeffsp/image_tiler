@@ -22,8 +22,8 @@ polygons get_window_polys (const rgb8_image_t &img, const convex_uniform_tile &t
     // get the polygons
     const polygons all_polys = get_tiled_polygons (locs, t.get_polygons (), scale, angle);
     std::clog << all_polys.size () << " unclipped polygons" << std::endl;
-    // filter out tiles that don't overlap
-    const polygons window_polys = get_overlapping_polygons (img.cols (), img.rows (), all_polys);
+    // filter out tiles that don't intersect
+    const polygons window_polys = get_intersecting_polygons (img.cols (), img.rows (), all_polys);
     return window_polys;
 }
 
