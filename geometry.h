@@ -57,7 +57,29 @@ point operator+ (const point &a, const point &b)
     return c += b;
 }
 
-typedef std::vector<point> points;
+class points
+{
+    public:
+        typedef typename std::vector<point>::iterator iterator;
+        typedef typename std::vector<point>::const_iterator const_iterator;
+        points () { }
+        explicit points (size_t sz) : _points(sz) { }
+        points(const std::initializer_list<point> &l) : _points(l) { }
+        point &operator[] (const size_t index) { return _points[index]; }
+        const point &operator[] (const size_t index) const { return _points[index]; }
+        size_t size() const { return _points.size (); }
+        iterator begin () { return _points.begin (); }
+        const_iterator begin () const { return _points.begin (); }
+        iterator end () { return _points.end (); }
+        const_iterator end () const { return _points.end (); }
+        bool empty() const { return _points.empty (); }
+        point &back () { return _points.back(); }
+        const point &back () const { return _points.back(); }
+        void push_back (const point &p) { _points.push_back(p); }
+    private:
+        std::vector<point> _points;
+};
+
 typedef points polygon;
 typedef std::vector<polygon> polygons;
 
