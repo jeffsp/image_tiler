@@ -57,14 +57,17 @@ point operator+ (const point &a, const point &b)
     return c += b;
 }
 
-class points
+typedef std::vector<point> points;
+
+class polygon
 {
     public:
-        typedef typename std::vector<point>::iterator iterator;
-        typedef typename std::vector<point>::const_iterator const_iterator;
-        points () { }
-        explicit points (size_t sz) : _points(sz) { }
-        points(const std::initializer_list<point> &l) : _points(l) { }
+        typedef typename points::iterator iterator;
+        typedef typename points::const_iterator const_iterator;
+        polygon () { }
+        polygon (const points &p) : _points(p) { }
+        polygon (size_t sz) : _points(sz) { }
+        polygon (const std::initializer_list<point> &l) : _points(l) { }
         point &operator[] (const size_t index) { return _points[index]; }
         const point &operator[] (const size_t index) const { return _points[index]; }
         size_t size() const { return _points.size (); }
@@ -76,11 +79,16 @@ class points
         point &back () { return _points.back(); }
         const point &back () const { return _points.back(); }
         void push_back (const point &p) { _points.push_back(p); }
+        friend std::ostream& operator<< (std::ostream &s, const polygon &p)
+        {
+            for (auto i : p._points)
+                s << i << std::endl;
+            return s;
+        }
     private:
-        std::vector<point> _points;
+        points _points;
 };
 
-typedef points polygon;
 typedef std::vector<polygon> polygons;
 
 std::ostream& operator<< (std::ostream &s, const points &p)
@@ -150,25 +158,28 @@ point negate (const point &p)
     return point (-p.x, -p.y);
 }
 
-polygon mirrorx (const polygon &p)
+template<typename T>
+T mirrorx (const T &p)
 {
-    polygon tmp (p);
+    T tmp (p);
     for (size_t i = 0; i < tmp.size (); ++i)
         tmp[i].y = -p[i].y;
     return tmp;
 }
 
-polygon mirrory (const polygon &p)
+template<typename T>
+T mirrory (const T &p)
 {
-    polygon tmp (p);
+    T tmp (p);
     for (size_t i = 0; i < tmp.size (); ++i)
         tmp[i].x = -p[i].x;
     return tmp;
 }
 
-polygon translate (const polygon &poly, const point &offset)
+template<typename T>
+T translate (const T &poly, const point &offset)
 {
-    polygon tmp (poly);
+    T tmp (poly);
     for (size_t i = 0; i < tmp.size (); ++i)
         tmp[i] += offset;
     return tmp;
@@ -180,17 +191,19 @@ point rotate (const point &p, const double deg)
     return point (p.x * cos (r) - p.y * sin (r), p.x * sin (r) + p.y * cos (r));
 }
 
-polygon rotate (const polygon &poly, const double deg)
+template<typename T>
+T rotate (const T &poly, const double deg)
 {
-    polygon tmp (poly.size ());
+    T tmp (poly);
     for (size_t i = 0; i < tmp.size (); ++i)
         tmp[i] = rotate (poly[i], deg);
     return tmp;
 }
 
-polygon scale (const polygon &poly, const double sx, const double sy)
+template<typename T>
+T scale (const T &poly, const double sx, const double sy)
 {
-    polygon tmp (poly);
+    T tmp (poly);
     for (size_t i = 0; i < tmp.size (); ++i)
     {
         tmp[i].x *= sx;
@@ -199,25 +212,28 @@ polygon scale (const polygon &poly, const double sx, const double sy)
     return tmp;
 }
 
-polygon scale (const polygon &poly, const double s)
+template<typename T>
+T scale (const T &poly, const double s)
 {
-    polygon tmp (poly);
+    T tmp (poly);
     for (size_t i = 0; i < tmp.size (); ++i)
         tmp[i] *= s;
     return tmp;
 }
 
-polygon affine (const polygon &poly, const point &t, const double deg, const double sx, const double sy)
+template<typename T>
+T affine (const T &poly, const point &t, const double deg, const double sx, const double sy)
 {
-    polygon tmp = translate (poly, t);
+    T tmp = translate (poly, t);
     tmp = rotate (tmp, deg);
     tmp = scale (tmp, sx, sy);
     return tmp;
 }
 
-polygon affine (const polygon &poly, const double sx, const double sy, const double deg, const point &t)
+template<typename T>
+T affine (const T &poly, const double sx, const double sy, const double deg, const point &t)
 {
-    polygon tmp = scale (poly, sx, sy);
+    T tmp = scale (poly, sx, sy);
     tmp = rotate (tmp, deg);
     tmp = translate (tmp, t);
     return tmp;
@@ -255,7 +271,7 @@ std::ostream& operator<< (std::ostream &s, const rectf &r)
 }
 
 // get the rectangular set of points that surround a set of points
-rectf get_bounding_rectf (const points &p)
+rectf get_bounding_rectf (const polygon &p)
 {
     rectf r;
     r.minx = std::numeric_limits<double>::max ();
