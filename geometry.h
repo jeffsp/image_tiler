@@ -65,7 +65,6 @@ class polygon
         typedef typename points::iterator iterator;
         typedef typename points::const_iterator const_iterator;
         polygon () { }
-        polygon (const points &p) : _points(p) { }
         polygon (size_t sz) : _points(sz) { }
         polygon (const std::initializer_list<point> &l) : _points(l) { }
         point &operator[] (const size_t index) { return _points[index]; }
@@ -85,8 +84,17 @@ class polygon
                 s << i << std::endl;
             return s;
         }
+
+        // the tile index identifies the tile in a grid of many tiles
+        size_t get_tile_index () const { return _tile_index; }
+        void set_tile_index (size_t index) { _tile_index = index; }
+        // the polygon index identifies the polygon within a single tile
+        size_t get_polygon_index () const { return _polygon_index; }
+        void set_polygon_index (size_t index) { _polygon_index = index; }
     private:
         points _points;
+        size_t _tile_index;
+        size_t _polygon_index;
 };
 
 typedef std::vector<polygon> polygons;

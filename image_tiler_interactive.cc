@@ -61,6 +61,7 @@ int main (int argc, char **argv)
         const char *window_name = "Image Tiler";
         int tile_number = 10;
         bool outline = false;
+        int transparency = 0;
         double scale = 30.0;
         double angle = 0.0;
         double xoffset = 0;
@@ -102,10 +103,15 @@ int main (int argc, char **argv)
                 }
             }
 
-            rgb8_image_t img (h, w);
+            rgb8_image_t img (original);
             for (size_t i = 0; i < e.size (); ++i)
                 for (auto j : {0, 1, 2})
                     fill (img, e[i].s, e[i].m[j], j);
+
+            for (size_t i = 0; i < img.size (); ++i)
+            {
+                img[i] = round (original[i] * transparency / 100.0 + img[i] * (1.0 - transparency / 100.0));
+            }
 
             if (outline)
                 img = draw_polys (img, all_polys, {212, 212, 212});
@@ -120,6 +126,8 @@ int main (int argc, char **argv)
                 case 32: { tile_number = (tile_number + 1) % tl.size (); } break;
                 case 'l': { outline = !outline; } break;
                 case 'r': { randomize = !randomize; } break;
+                case 't': { transparency += 1; transparency %= 100; } break;
+                case 'T': { transparency += 10; transparency %= 100; } break;
                 case 'A': { angle -= 1; } break;
                 case 'a': { angle += 1; } break;
                 case 'S': { scale = scale > 20 ? scale - 10 : 10; } break;

@@ -70,14 +70,19 @@ polygons get_tiled_polygons (const points &tile_locations, const polygons &polys
     polygons all_polys;
 
     // for each tile location
+    size_t tile_index = 0;
     for (const auto &offset : tile_locations)
     {
         // for each polygon in a tile
+        size_t polygon_index = 0;
         for (const auto &tile_poly : polys)
         {
             // convert to window coordinates
             // save off a transformed poly
-            all_polys.push_back (affine (tile_poly, scale, scale, angle, offset));
+            polygon p = affine (tile_poly, scale, scale, angle, offset);
+            p.set_tile_index (tile_index++);
+            p.set_polygon_index (polygon_index++);
+            all_polys.push_back (p);
         }
     }
     return all_polys;
