@@ -36,7 +36,7 @@ run: waf
 	rm -f tmp2.jpg
 	rm -f tmp2.svg
 
-IN=images/a
+IN=images/i
 
 montage1:
 	./build/release/image_tiler_interactive $(IN).png
