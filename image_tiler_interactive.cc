@@ -117,7 +117,7 @@ int main (int argc, char **argv)
                 img = draw_polys (img, all_polys, {212, 212, 212});
 
             cv::imshow (window_name, image_to_mat (img));
-            int ch = cv::waitKey (0);
+            char ch = cv::waitKey (0);
 
             switch (ch)
             {
