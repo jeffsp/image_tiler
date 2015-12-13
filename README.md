@@ -1,3 +1,12 @@
+# Image Tiler
+
+Archimedean tilings.  Semi-regular tilings on a 2d plane.
+
+See [Euclidean tilings by convex regular polygons, Archimedean, uniform or semiregular tilings](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#Archimedean.2C_uniform_or_semiregular_tilings).
+
+The image is divided into Archimedean tiles, and then the tile color is determined
+by taking the average of all pixels within a tile.
+
 # Examples
 
 ## Example 1
