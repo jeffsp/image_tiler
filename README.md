@@ -4,7 +4,7 @@ Archimedean tilings: Semi-regular tilings on a 2d plane.
 
 See [Euclidean tilings by convex regular polygons, Archimedean, uniform or semiregular tilings](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#Archimedean.2C_uniform_or_semiregular_tilings).
 
-![Archimedean Tilings](/images/tilings.png?raw=true "Archimedean Tilings")
+[![Archimedean Tilings](/images/tilings.png?raw=true "Archimedean Tilings")](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#Archimedean.2C_uniform_or_semiregular_tilings)
 
 This simple program allows you to read an image and to tessellate it by using
 Archimedean tilings.
