@@ -2,7 +2,7 @@
 
 Archimedean tilings: Semi-regular tilings on a 2d plane.
 
-See [Euclidean tilings by convex regular polygons, Archimedean, uniform or semiregular tilings](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#Archimedean.2C_uniform_or_semiregular_tilings).
+See [Euclidean tilings by convex regular polygons](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons).
 
 [![Archimedean Tilings](/images/tilings.png?raw=true "Archimedean Tilings")](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#Archimedean.2C_uniform_or_semiregular_tilings)
 
