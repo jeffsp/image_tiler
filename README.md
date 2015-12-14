@@ -10,7 +10,7 @@ color is determined by taking the average of all image pixels within a tile.
 
 For more information, see [Euclidean tilings by convex regular polygons](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons).
 
-Also see [regular tilings](https://en.wikipedia.org/wiki/Uniform_tiling) or [Archimedean Tilings](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#Archimedean.2C_uniform_or_semiregular_tilings):
+Also see [regular tilings](https://en.wikipedia.org/wiki/Uniform_tiling) or [semi-regular (Archimedean) Tilings](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#Archimedean.2C_uniform_or_semiregular_tilings):
 
 [![Archimedean Tilings](/images/tilings.png?raw=true "Archimedean Tilings")](https://en.wikipedia.org/wiki/Euclidean_tilings_by_convex_regular_polygons#Archimedean.2C_uniform_or_semiregular_tilings)
 
